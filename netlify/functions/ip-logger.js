@@ -22,8 +22,15 @@ function parseUserAgent(ua) {
 
 exports.handler = async function(event) {
   try {
-    // IP adresi al (Netlify üzerinde gerçek IP'yi almak için)
-    const ip = event.headers['x-forwarded-for']?.split(',')[0] || 'Bilinmiyor';
+    // IP adresi al (Netlify + Cloudflare ortamı)
+    // Öncelik: Netlify'ın gerçek istemci IP başlığı → Cloudflare başlığı → X-Forwarded-For
+    const headers = event.headers || {};
+    const ip =
+      headers['x-nf-client-connection-ip'] ||
+      headers['client-ip'] ||
+      headers['cf-connecting-ip'] ||
+      (headers['x-forwarded-for']?.split(',')[0].trim()) ||
+      'Bilinmiyor';
 
     // Tarayıcı bilgisi
     const userAgent = event.headers['user-agent'] || 'Bilinmiyor';
